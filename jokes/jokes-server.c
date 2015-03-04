@@ -20,7 +20,7 @@ Date:		2/6/2015
 #define MAX_MSG 1004
 #define DEBUG 1
 
-int killsig = 0;
+int killsig = 0, finished = 0;
 
 /*******************************************************
 Input: sig - The signal received
@@ -33,12 +33,13 @@ Description: Sets killsig, a global boolean variable which  represents
 void softkill(int sig)
 {
 	killsig = 1;
+	finished = 1;
 }
 
 int main()
 {
 	struct sockaddr_in sin;
-	unsigned int len, code_size = 3, message_size = 64, joke_state = 0, joke_num = 4, finished;
+	unsigned int len, code_size = 3, message_size = 64, joke_state = 0, joke_num = 4;
 	int sock, new_sock, code_found, code_num = 7;
 	char mesg[code_size + message_size];
 	char codes[code_num][code_size], response1[joke_num][message_size], response2[joke_num][message_size];
@@ -74,6 +75,7 @@ int main()
 //	response2 = {"Doughnut ask, it is a secret.", "I didn't know you could yodel!", "Are you an owl?", "Dewey have to keep telling silly jokes?"};
 
 	signal(SIGINT, softkill);
+	signal(SIGTERM, softkill);
 	
 	//build adddress data structure
 	bzero((char *) &sin, sizeof(sin));	//zero out the address in terms of bytes
