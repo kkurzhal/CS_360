@@ -113,10 +113,12 @@ int main()
 			{
 				//get the message and its length
 				bzero(mesg, code_size + message_size);
-				len = recv(new_sock, mesg, 0, 0);
+				len = recv(new_sock, mesg, code_size + message_size, 0);
 				
 				//check to make sure that the message length is correct
-				if(len != code_size + message_size)
+//				len = code_size + message_size; //temporary for testing
+//				if(len != code_size + message_size)
+				if(len > code_size + message_size || len < 1)
 				{
 					finished = 1;
 					killsig = 1;					
@@ -125,11 +127,12 @@ int main()
 					{
 						printf("Message size does not match expected size.\n");
 						printf("Message was: %s\n", mesg);
+						printf("Message length: %d\n", len);
 					}
 
-					bzero(mesg, code_size + message_size);					
+					//bzero(mesg, code_size + message_size);					
 					strncpy(mesg, "600Errors aren't funny!", code_size + message_size);
-					send(new_sock, mesg, len, 0);
+					send(new_sock, mesg, code_size + message_size, 0);
 				}
 				else
 				{
@@ -153,28 +156,28 @@ int main()
 							case 0:
 								strncpy(mesg, "100knock knock", code_size + message_size);
 								break;
-/*								case 1:
+/*							case 1:
 								printf("Something went wrong!  Received code 100!\n");
 								break;
-*/								case 2:
+*/							case 2:
 								strncpy(mesg, "300", code_size);
 								strcat(mesg, response1[joke_state]);
 								break;
-/*								case 3:
+/*							case 3:
 								printf("Somethings went wrong!  Received code 300!\n");
 								break;
-*/								case 4:
+*/							case 4:
 								strncpy(mesg, "500", code_size);									
 								strcat(mesg, response2[joke_state]);
 								finished = 1;
 								break;
-/*								case 5:
+/*							case 5:
 								printf("Something went wrong!  Received code 500!\n");
 								break;
 							case 6:
 								*mesg = "600Errors aren't funny!";
 								break;
-*/								default:
+*/							default:
 								//the code needs to be revamped so that there is no need for a default
 								if(DEBUG == 1)
 								{
@@ -182,11 +185,11 @@ int main()
 									printf("Message was: %s\n", mesg);
 								}
 
-								bzero(mesg, code_size + message_size);
+								//bzero(mesg, code_size + message_size);
 								strncpy(mesg, "600Errors aren't funny!", code_size + message_size);
 						}
 
-						send(new_sock, mesg, len, 0);
+						send(new_sock, mesg, code_size + message_size, 0);
 					}
 					else
 					{
@@ -198,7 +201,7 @@ int main()
 
 						bzero(mesg, code_size + message_size);
 						strncpy(mesg, "600Errors aren't funny!", code_size + message_size);
-						send(new_sock, mesg, len, 0);
+						send(new_sock, mesg, code_size + message_size, 0);
 					}
 				}
 			}
