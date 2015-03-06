@@ -34,20 +34,14 @@ void capitalize(char *cstr)
 	}
 }
 
-void help(char *options[])
-{
-	printf("Option\tCode\tMessage\n");
-	printf("%s\t%s\t%s\n", options[0], options[1], options[2]);
-}
-
 int main(int argc, char* argv[])
 {
 	struct hostent *hp;
 	struct sockaddr_in sin;
 	char *host = NULL, mesg[PACKET_SIZE] = {0}, exit_str[] = "EXIT", response_mesg[PACKET_SIZE] = {0};
-	int sock, finished = 0, valid_choice, i, j;
-	const int opt_rows = 5, opt_columns = 3;
-	char *options[5][3] = {
+	int sock, finished = 0, valid_choice, i;
+	const int opt_rows = 5;
+	const char *options[5][3] = {
 			{"0", "None", "Get help"},
 			{"1", "000", "Tell me a joke"},
 			{"2", "200", "Who's there?"},
@@ -61,6 +55,8 @@ int main(int argc, char* argv[])
 	{
 		host = argv[1];	//get the hostname if passed
 	}
+
+	printf("\n");
 
 	while( host == NULL || (strncmp(host, exit_str, 4) != 0 && !(hp = gethostbyname(host)) ) )	//empty hostnames are not allowed, and check for an exit
 	{
@@ -120,10 +116,16 @@ int main(int argc, char* argv[])
 		//prompt for message
 		do
 		{
-			fflush(stdout);
-			printf("Please choose an option: ");
-//			fflush(stdout);
-			scanf("%c", opt_choice);
+		
+			printf("\nPlease choose an option: ");
+
+			//prevent grabbing the newline character
+			do
+			{
+				scanf("%c", opt_choice);
+			}
+			while(strcmp(opt_choice, "\n") == 0);
+			
 			printf("\n");
 
 			//check if choice is valid
