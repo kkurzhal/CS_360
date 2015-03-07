@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 			{"4", "600", "Errors aren't funny"}
 		};
 	char opt_choice[] = "0";
-	strcpy(response_mesg, "NO RESPONSE");
+	strncpy(response_mesg, "NO RESPONSE", PACKET_SIZE);
 
 	if(argc == 2)
 	{
@@ -154,13 +154,13 @@ int main(int argc, char* argv[])
 			case 3:
 				strncpy(mesg, options[3][1], PACKET_SIZE);
 				//tack on the previous response_mesg to the "(response_mesg) who?" message
-				strcat(mesg, response_mesg);
-				strcat(mesg, options[3][2]);
+				strncat(mesg, response_mesg, PACKET_SIZE - 3);
+				strncat(mesg, options[3][2], 5);
 				break;
 			default:
 				//the default handles cases for messages 1,2,4
 				strncpy(mesg, options[valid_choice][1], PACKET_SIZE);
-				strcat(mesg, options[valid_choice][2]);
+				strncat(mesg, options[valid_choice][2], PACKET_SIZE - 3);
 				break;
 		}
 
