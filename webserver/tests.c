@@ -20,6 +20,21 @@ int main()
 
 	int lengths[5] = {10, 20, 30, 40, 50};
 
+	char *nulls[4] = {"uno", "dos", "one", "two"};
+
+	char *dirs[3] = {"./", "/home/kyle/", "/home/kyle/flashdrive/"};
+
+	//null byte test
+	printf("-------------BEGIN NULL BYTE TESTS-------------\n");
+	for(index = 0; index < 4; ++index)
+	{
+		if(strlen(nulls[index]) < 3 || nulls[index][3] != '\0')
+			printf("Failed: %s\n", nulls[index]);
+		else
+			printf("Succeeded: %s\n", nulls[index]);
+	}
+	printf("-------------FINISH NULL BYTE TESTS-------------\n");
+
 	//header tests
 	printf("-------------BEGIN HEADER TESTS-------------\n");
 
@@ -71,7 +86,24 @@ int main()
 
 	tmp_string = NULL;
 
-	printf("-------------FINISH MIME TESTS-------------\n");
+	printf("-------------FINISH CAPITALIZE TESTS-------------\n");
 
+
+	printf("-------------BEGIN ROOT TESTS-------------\n");
+	for(index = 0; index < 3; ++index)
+	{
+		tmp_string = get_root();
+		if(tmp_string != NULL)
+			printf("Get Root Succeeded: %s\n", tmp_string);
+		else
+			printf("Get Root Failed: %s\n", tmp_string);
+
+		if(check_root_exists(tmp_string) == 1)
+			printf("Check Root Succeeded: %s\n", tmp_string);
+		else
+			printf("Check Root Failed: %s\n", tmp_string);
+		
+	}
+	printf("-------------FINISH ROOT TESTS-------------\n");
 	return 0;
 }

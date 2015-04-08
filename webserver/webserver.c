@@ -14,13 +14,33 @@ Date:		4/8/2015
 int killsig = 0;
 void softkill(int);
 
-int main()
+int main(int argc, char* argv[])
 {
 	struct sockaddr_in sin;
 	unsigned int len, packet_size = 100;
 	int sock, new_sock;
 	char mesg[packet_size];
+	char *root = NULL, *header = NULL;
+	int root_found = 0;
 
+	//get the root folder for serving files
+	while(root_found == 0)
+	{
+		root = get_root();
+		if(check_root_exists(root) == 1)
+		{
+			//exit if the user specifies "EXIT"
+			if(strncmp(root, "EXIT", 4) == 0)
+			{
+				printf("Now exiting...\n");
+				free(root);
+				root = NULL;
+				exit(1);
+			}
+			else
+				root_found = 1;
+		}
+	}
 
 	//set up the signal detection
 	signal(SIGINT, softkill);
@@ -45,7 +65,7 @@ int main()
 		exit(1);
 	}
 
-	listen(sock, MAX_PENDING);
+	listen(sock, MAX_PENDING);mai
 	len = sizeof(sin);
 
 	//loop until the kill signal is activated
@@ -83,6 +103,9 @@ int main()
 	{
 		printf("Main socket closed...\n");
 	}
+
+	free(root);
+	root = NULL;
 
 	return 0;
 }
