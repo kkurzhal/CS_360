@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 	struct sockaddr_in sin;
 	unsigned int len, packet_size = 100;
 	int sock, new_sock;
-	char mesg[packet_size];
+	char mesg[MAX_REQUEST];
 	char *root = NULL;
 	int root_found = 0;
 

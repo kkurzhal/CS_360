@@ -36,7 +36,7 @@ int main()
 
 	char requests[5][2][200] =
 	{
-		{"GET /test.txt\n", "./"},
+		{"GET /test.txt\n", "/"},
 		{"GET /CS_360/client.c\n", "/home/kyle/flashdrive"},
 		{"POST /\n", "./"},
 		{"GET d/\n", "./"},
@@ -181,7 +181,7 @@ int main()
 
 	tmp_string = NULL;
 
-	FILE *tmp = fopen("/home/kyle/flashdrive/CS_360/client.c\n", "r");
+	FILE *tmp = fopen("/test.txt", "r");
 	if(tmp == NULL)
 		printf("Got NULL\n");
 	else

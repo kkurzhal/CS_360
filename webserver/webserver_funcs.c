@@ -155,13 +155,13 @@ Description: Concatenates the specified root folder and
 char* concat_file_path(char file_requested[], char root[])
 {
 	//get the lengths of the strings
-	int root_len = strlen(file_requested), file_r_len = strlen(file_requested);
+	int root_len = strlen(root), file_r_len = strlen(file_requested);
 	//create a pointer for the file path
 	char* file_finder = (char*) malloc(root_len + file_r_len), *slash_found = NULL;
 	strcpy(file_finder, root);
 
 	//only allow one forward slash
-	if(root[root_len] == '/' && file_requested[0] == '/')
+	if(root[root_len - 1] == '/' && file_requested[0] == '/')
 		slash_found = &file_requested[1];
 	else
 		slash_found = &file_requested[0];
@@ -192,7 +192,7 @@ char* get_file_path(char request[], char root[])
 
 	//make a copy of the request for manipulation
 	strcpy(tmp_request, request);
-	tmp_slash = strstr(request, "/");
+	tmp_slash = strstr(tmp_request, "/");
 
 	//if the no "/" is found, then exit and return "NONE"
 	if(tmp_slash == NULL)
@@ -303,7 +303,7 @@ Description: Gets the root folder from the command line
 *******************************************************/
 char* get_root()
 {
-	char *root = (char*) malloc(MAX_IN);
+	char *root = (char*) malloc(MAX_ROOT);
 	printf("\nPlease input a valid root folder, or specify \"EXIT\" to exit: ");
 	fflush(stdout);
 	//get the root folder

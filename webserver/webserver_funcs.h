@@ -14,7 +14,8 @@
 #include <ctype.h>
 #include <dirent.h>
 
-#define MAX_IN 100
+#define MAX_ROOT 100
+#define MAX_MESSAGE 1024
 #define MAX_REQUEST 64
 #define MAX_RESPONSE 1500
 
