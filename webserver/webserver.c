@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 	unsigned int len, packet_size = 100;
 	int sock, new_sock;
 	char mesg[packet_size];
-	char *root = NULL, *header = NULL;
+	char *root = NULL;
 	int root_found = 0;
 
 	//get the root folder for serving files
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
-	listen(sock, MAX_PENDING);mai
+	listen(sock, MAX_PENDING);
 	len = sizeof(sin);
 
 	//loop until the kill signal is activated

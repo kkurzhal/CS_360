@@ -16,16 +16,17 @@
 
 #define MAX_IN 100
 #define MAX_REQUEST 64
+#define MAX_RESPONSE 1500
 
 char* capitalize(char[]);
-long get_file_size();
+int check_request(char[], char[]);
+int check_root_exists(char[]);
+char* concat_file_path(char[], char[]);
+char* get_file_path(char[], char[]);
+long get_file_size(char[]);
+char* get_MIME_type(char[]);
+char* get_root();
 char* make_header(char[], char[], int);
 char* make_code(int);
-char* get_MIME_type(char[]);
-int check_root_exists(char[]);
-char* get_root();
-int check_request(char[], char[]);
-char* concat_file_path(char[], char[]);
-
 
 #endif
