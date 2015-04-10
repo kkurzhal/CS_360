@@ -8,7 +8,7 @@ Date:		4/8/2015
 
 #define SERVER_PORT 8181
 #define MAX_PENDING 5
-#define MAX_MSG 1004
+#define MAX_MSG 1024
 #define DEBUG 1
 
 int killsig = 0;
@@ -17,11 +17,11 @@ void softkill(int);
 int main(int argc, char* argv[])
 {
 	struct sockaddr_in sin;
-	unsigned int len, packet_size = 100;
+	unsigned int len;
 	int sock, new_sock;
-	char mesg[MAX_REQUEST];
-	char *root = NULL;
-	int root_found = 0;
+	char mesg[MAX_RESPONSE];
+	char *root = NULL, *file_name = NULL, *response_code = NULL, *content_type = NULL,  *header = NULL;
+	int root_found = 0, code_flag = 0, file_size = 0;
 
 	//get the root folder for serving files
 	while(root_found == 0)
@@ -80,8 +80,8 @@ int main(int argc, char* argv[])
 		else
 		{
 			//get the message and its length
-			bzero(mesg, packet_size);
-			len = recv(new_sock, mesg, packet_size, 0);
+			bzero(mesg, MAX_RESPONSE);
+			len = recv(new_sock, mesg, MAX_MSG, 0);
 			printf("%s\n", mesg);
 			
 			//check to make sure that the message length is greater than 0
@@ -89,12 +89,53 @@ int main(int argc, char* argv[])
 				killsig = 1;
 			else
 			{
+				//get the file path and the file size
+				file_name = get_file_path(mesg, root);
+				printf("Got file name: %s\n", file_name);
+				file_size = get_file_size(file_name);
+				printf("Got file size: %d\n", file_size);
+
+				//check the request and get the code flag
+				code_flag = check_request(mesg, root);
+				printf("Got code flag...\n");
+			
+				//make the correct response code
+				response_code = make_code(code_flag);
+				printf("Got response code...\n");
+
+				//get the MIME type
+				content_type = get_MIME_type(file_name);
+				printf("Got MIME type...\n");
+
+				//make the header
+				header = make_header(response_code, content_type, file_size);
+				printf("Got header...\n");
+
+				printf("----------------------HEADER START----------------------\n%s\n----------------------HEADER END----------------------\n", header);
+
+				//need to send back the message here
 			}
 
+			//remember to close the new socket
 			if(close(new_sock) == 0)
 			{
 				printf("New socket closed...\n");
 			}
+
+			//necessary to reset the ints?
+
+			//free the memory for the response code
+			free(file_name);
+			file_name = NULL;
+
+			free(response_code);
+			response_code = NULL;
+
+			free(content_type);
+			content_type = NULL;
+
+			free(header);
+			header = NULL;
 
 		}
 	}

@@ -216,6 +216,8 @@ char* get_file_path(char request[], char root[])
 			tmp_request[index] = '\0';
 	}
 
+	printf("Temp path: %s|break|\n", tmp_slash);
+
 	file_path = concat_file_path(tmp_slash, root);
 
 	tmp_slash = NULL;
@@ -234,19 +236,23 @@ Output: Returns a long type representing the number of
 Description: Measures the size of the file in terms of
 			 bytes.
 *******************************************************/
-long get_file_size(char file_d[])
+int get_file_size(char file_d[])
 {
-	long file_length = 0;	
+	int file_length = 0;	
 	FILE *in_file = fopen(file_d, "r");
-	
-	//go to the end of the file
-	fseek(in_file, 0L, SEEK_END);
 
-	//get the position/length of the cursor
-	file_length = ftell(in_file);
+	if(in_file != NULL)
+	{	
+		//go to the end of the file
+		fseek(in_file, 0L, SEEK_END);
 
-	fclose(in_file);
-	in_file = NULL;
+		//get the position/length of the cursor
+		file_length = (int) ftell(in_file);
+
+		fclose(in_file);
+		in_file = NULL;
+	}
+
 	return file_length;
 }
 

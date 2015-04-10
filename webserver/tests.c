@@ -179,13 +179,24 @@ int main()
 	}
 	printf("-------------FINISH GET PATH TESTS-------------\n");
 
-	tmp_string = NULL;
-
-	FILE *tmp = fopen("/test.txt", "r");
+	tmp_string = get_file_path((char*) "GET /test.txt", (char*) "/home/kyle/flashdrive/CS_360/webserver/");
+	
+	FILE *tmp = fopen(tmp_string, "r");
 	if(tmp == NULL)
 		printf("Got NULL\n");
 	else
-		printf("It worked!\n");
+	{
+		printf("Found file: /home/kyle/flashdrive/CS_360/webserver/test.txt\n");
+		int file_size = get_file_size((char*) "/home/kyle/flashdrive/CS_360/webserver/test.txt");
+		printf("File size: %d\n", file_size);
+		fclose(tmp);
+		tmp = NULL;
+	}
+	
+	free(tmp_string);
+	tmp_string = NULL;
+
+	printf("Test many nulls: blah\0\0\0\0|break|\n");
 
 	return 0;
 }
