@@ -167,6 +167,7 @@ char* concat_file_path(char file_requested[], char root[])
 		slash_found = &file_requested[0];
 
 	strcat(file_finder, slash_found);
+	slash_found = NULL;
 
 	return file_finder;
 }
@@ -188,7 +189,7 @@ Description: Strips out the name of the file from the
 char* get_file_path(char request[], char root[])
 {
 	int request_len = strlen(request), index = 0;
-	char *file_path = NULL, *tmp_slash = NULL, tmp_request[request_len];
+	char *file_path = NULL, *tmp_slash = NULL, *search = NULL, tmp_request[request_len];
 
 	//make a copy of the request for manipulation
 	strcpy(tmp_request, request);
@@ -204,16 +205,30 @@ char* get_file_path(char request[], char root[])
 	else
 	{
 		//first find the "/"
-		for(; tmp_request[index] != '/' && index < request_len; ++index)
+/*		for(; tmp_request[index] != '/' && index < request_len; ++index)
 			continue;
 
 		//then find a space, newline, or in extreme cases, the end of the string
 		for(; tmp_request[index] != ' ' && tmp_request[index] != '\n' && index < request_len; ++index)
 			continue;
+*/
+		//fill out control characters with null bytes
+		search = tmp_slash;
+		while(*search != '\0')
+		{
+			if(*search < 32)
+				*search = '\0';
 
+			++search;
+		}
+
+		search = NULL;
+
+/*
 		//fill out the remaining spots with null bytes
 		for(; index < request_len; ++index)
 			tmp_request[index] = '\0';
+*/
 	}
 
 	printf("Temp path: %s|break|\n", tmp_slash);

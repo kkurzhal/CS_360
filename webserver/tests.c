@@ -179,7 +179,7 @@ int main()
 	}
 	printf("-------------FINISH GET PATH TESTS-------------\n");
 
-	tmp_string = get_file_path((char*) "GET /test.txt", (char*) "/home/kyle/flashdrive/CS_360/webserver/");
+	tmp_string = get_file_path((char*) "GET /test.txt\r\n", (char*) "/home/kyle/flashdrive/CS_360/webserver/");
 	
 	FILE *tmp = fopen(tmp_string, "r");
 	if(tmp == NULL)
@@ -196,7 +196,7 @@ int main()
 	free(tmp_string);
 	tmp_string = NULL;
 
-	printf("Test many nulls: blah\0\0\0\0|break|\n");
+//	printf("Test many nulls: blah\0\0\0\0|break|\n");
 
 	return 0;
 }

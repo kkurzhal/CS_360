@@ -21,7 +21,8 @@ int main(int argc, char* argv[])
 	int sock, new_sock;
 	char mesg[MAX_RESPONSE];
 	char *root = NULL, *file_name = NULL, *response_code = NULL, *content_type = NULL,  *header = NULL;
-	int root_found = 0, code_flag = 0, file_size = 0;
+	int root_found = 0, code_flag = 0, file_size = 0, tmp = 0, index = 0, count = 0;
+	FILE *out_file = NULL;
 
 	//get the root folder for serving files
 	while(root_found == 0)
@@ -83,29 +84,53 @@ int main(int argc, char* argv[])
 			bzero(mesg, MAX_RESPONSE);
 			len = recv(new_sock, mesg, MAX_MSG, 0);
 			printf("%s\n", mesg);
+			fflush(stdout);
 			
 			//check to make sure that the message length is greater than 0
 			if(len < 1)
 				killsig = 1;
 			else
 			{
+/*				printf("Get message ASCII value\n------------------\n");
+				for(tmp = 0; tmp < strlen(mesg); ++tmp)
+				{
+					printf("%d|", mesg[tmp]);
+					fflush(stdout);
+				}
+				printf("\n");
+*/
 				//get the file path and the file size
 				file_name = get_file_path(mesg, root);
 				printf("Got file name: %s\n", file_name);
-				file_size = get_file_size(file_name);
+/*				printf("Get file ASCII value\n------------------\n");
+				for(tmp = 0; tmp < strlen(file_name); ++tmp)
+				{
+					printf("%d||", file_name[tmp]);
+					fflush(stdout);
+				}
+				printf("\n");
+*/				file_size = get_file_size(file_name);
 				printf("Got file size: %d\n", file_size);
 
 				//check the request and get the code flag
 				code_flag = check_request(mesg, root);
-				printf("Got code flag...\n");
+				printf("Got code flag: %d\n", code_flag);
 			
+/*				printf("Get message ASCII value\n------------------\n");
+				for(tmp = 0; tmp < strlen(mesg); ++tmp)
+				{
+					printf("%d|", mesg[tmp]);
+					fflush(stdout);
+				}
+				printf("\n");
+*/
 				//make the correct response code
 				response_code = make_code(code_flag);
-				printf("Got response code...\n");
+				printf("Got response code: %s\n", response_code);
 
 				//get the MIME type
 				content_type = get_MIME_type(file_name);
-				printf("Got MIME type...\n");
+				printf("Got MIME type: %s\n", content_type);
 
 				//make the header
 				header = make_header(response_code, content_type, file_size);
@@ -113,7 +138,38 @@ int main(int argc, char* argv[])
 
 				printf("----------------------HEADER START----------------------\n%s\n----------------------HEADER END----------------------\n", header);
 
-				//need to send back the message here
+				//send the header back to the client
+				send(new_sock, header, strlen(header), 0);
+
+				//send back the file if available
+				if(code_flag == 1)
+				{
+					//open the file
+					out_file = fopen(file_name, "r");
+					//zero out the message buffer with null bytes
+					bzero(mesg, MAX_RESPONSE);
+					
+					for(index = 0, count = 0; index < file_size; ++index, ++count)
+					{
+						//send the message once the max response limit is reached
+						if(count == MAX_RESPONSE)
+						{
+							printf("File Data: %s\n", mesg);
+							send(new_sock, mesg, MAX_RESPONSE, 0);
+							bzero(mesg, MAX_RESPONSE);
+							count = 0;
+						}
+
+						//read in the file
+						fscanf(out_file, "%c", mesg);
+					}
+
+					//send the final message
+					send(new_sock, mesg, strlen(mesg), 0);
+
+					//close the sending file
+					fclose(out_file);
+				}
 			}
 
 			//remember to close the new socket
