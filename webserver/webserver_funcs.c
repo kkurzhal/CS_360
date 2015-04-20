@@ -54,7 +54,7 @@ int check_request(char request[], char root[])
 	FILE *file_found = NULL;
 	
 	//add copy of request to tmp_request
-	strcpy(tmp_request, request);
+	strncpy(tmp_request, request, request_len);
 
 	//check if the request is too large for the buffer
 	//if so, return 414 code flag
@@ -91,18 +91,21 @@ int check_request(char request[], char root[])
 	//check if the file exists
 	p_file = get_file_path(request, root);
 
-	//attempt to open the file, and set the flag if it is found
-	file_found = fopen(p_file, "r");
-
-	if(file_found != NULL)
+	if(p_file != NULL)
 	{
-		file_found_flag = 1;
-		fclose(file_found);
-		file_found = NULL;
-	}
+		//attempt to open the file, and set the flag if it is found
+		file_found = fopen(p_file, "r");
 
-	free(p_file);
-	p_file = NULL;
+		if(file_found != NULL)
+		{
+			file_found_flag = 1;
+			fclose(file_found);
+			file_found = NULL;
+		}
+
+		free(p_file);
+		p_file = NULL;
+	}
 
 	//if the file is not found, then return the flag for code 404
 	if(file_found_flag == 0)
@@ -157,8 +160,15 @@ char* concat_file_path(char file_requested[], char root[])
 	//get the lengths of the strings
 	int root_len = strlen(root), file_r_len = strlen(file_requested);
 	//create a pointer for the file path
-	char* file_finder = (char*) malloc(root_len + file_r_len), *slash_found = NULL;
-	strcpy(file_finder, root);
+	char *file_finder = (char*) malloc(root_len + file_r_len + 1), *slash_found = NULL;
+	bzero(file_finder, root_len + file_r_len + 1);
+
+	printf("Actual root before copy: %s\n", root);
+	printf("Before root copy: %s\n", file_finder);
+
+	strncpy(file_finder, root, root_len);
+
+	printf("After root copy: %s\n", file_finder);
 
 	//only allow one forward slash
 	if(root[root_len - 1] == '/' && file_requested[0] == '/')
@@ -166,7 +176,12 @@ char* concat_file_path(char file_requested[], char root[])
 	else
 		slash_found = &file_requested[0];
 
-	strcat(file_finder, slash_found);
+	printf("Slash found: %s\n", slash_found);
+
+	strncat(file_finder, slash_found, strlen(slash_found));
+
+	printf("After file concat: %s\n", file_finder);
+
 	slash_found = NULL;
 
 	return file_finder;
@@ -180,7 +195,8 @@ Input: request - The request c-string received from the
 	   root - The root folder c-string from which files
 			  may be accessed in the system.
 
-Output: Returns the c-string of the file path.
+Output: Returns the c-string of the file path if found, 
+		otherwise it returns NULL.
 
 Description: Strips out the name of the file from the
 			 request, and formats it as a complete file
@@ -189,53 +205,36 @@ Description: Strips out the name of the file from the
 char* get_file_path(char request[], char root[])
 {
 	int request_len = strlen(request), index = 0;
-	char *file_path = NULL, *tmp_slash = NULL, *search = NULL, tmp_request[request_len];
+	char *file_path = NULL, *tmp_slash = NULL, *search = NULL, tmp_request[request_len + 1];
+
+	bzero(tmp_request, request_len + 1);
 
 	//make a copy of the request for manipulation
-	strcpy(tmp_request, request);
+	strncpy(tmp_request, request, request_len);
 	tmp_slash = strstr(tmp_request, "/");
 
-	//if the no "/" is found, then exit and return "NONE"
-	if(tmp_slash == NULL)
-	{
-		file_path = (char*) malloc(5);
-		strcpy(file_path, "NONE");
-	}
+	printf("Temp request: %s\n", tmp_request);
+	printf("Tmp slash: %s\n", tmp_slash);
+
 	//otherwise, fill out with null bytes in spaces following the destination address
-	else
+	if(tmp_slash != NULL)
 	{
-		//first find the "/"
-/*		for(; tmp_request[index] != '/' && index < request_len; ++index)
-			continue;
-
-		//then find a space, newline, or in extreme cases, the end of the string
-		for(; tmp_request[index] != ' ' && tmp_request[index] != '\n' && index < request_len; ++index)
-			continue;
-*/
-		//fill out control characters with null bytes
+		//fill out control characters and spaces with null bytes
 		search = tmp_slash;
-		while(*search != '\0')
+		for(; index < request_len + 1; ++index, ++search)
 		{
-			if(*search < 32)
+			if(*search <= 32)
 				*search = '\0';
-
-			++search;
 		}
 
 		search = NULL;
 
-/*
-		//fill out the remaining spots with null bytes
-		for(; index < request_len; ++index)
-			tmp_request[index] = '\0';
-*/
+		file_path = concat_file_path(tmp_slash, root);
+
+		printf("Concatenated path: %s\n", file_path);
+
+		tmp_slash = NULL;
 	}
-
-	printf("Temp path: %s|break|\n", tmp_slash);
-
-	file_path = concat_file_path(tmp_slash, root);
-
-	tmp_slash = NULL;
 
 	return file_path;
 }
@@ -277,37 +276,48 @@ Input: file_name - The c-string representing the name of
 				   the file that must be evaluated.
 
 Output: Returns a c-string of the MIME type, representing
-		the file, to be used in the HTTP header.
+		the file, to be used in the HTTP header.  If no
+		MIME can be found, then the function returns NULL.
 
 Description: Gets the MIME type of the specified file.
 *******************************************************/
 char* get_MIME_type(char file_name[])
 {
 	//create a new c-string
-	char *mime;
-	char extensions[7][6] = {".html", ".css", ".js", ".jpeg", ".png", ".gif"};
+	char *mime = NULL;
+	char extensions[7][2][6] = 
+	{
+		{".html", ""},
+		{".css", ""},
+		{".js", ""},
+		{".jpeg", ".jpg"},
+		{".png", ""},
+		{".gif", ""}
+	};
 
 	char types[6][15] = {"text/html", "text/css", "application/js", "image/jpeg", "image/png", "image/gif"};
 
-	int index = 0;
+	int index_i = 0, index_j = 0;
 
-	//find which file type matches, if any, according to the substring
-	for(; index < 6; ++index)
-	{
-		if(strstr(file_name, extensions[index]))
-			break;
-	}
-
-	//copy the appropriate value into the "mime" variable
-	if(index < 6)
-	{
-		mime = (char*) malloc(strlen(types[index]) + 1);
-		strcpy(mime, types[index]);
-	}
+	if(file_name == NULL)
+		return NULL;
 	else
 	{
-		mime = (char*) malloc(5);
-		strcpy(mime, "NONE");
+		//find which file type matches, if any, according to the substring
+		for(; index_i < 6; ++index_i)
+		{
+			for(index_j = 0; index_j < 2; ++index_j)
+			{
+				if(strlen(extensions[index_i][index_j]) > 0 && strstr(file_name, extensions[index_i][index_j]))
+				{
+					//copy the appropriate value into the "mime" variable
+					mime = (char*) malloc(strlen(types[index_i]) + 1);
+					bzero(mime, strlen(types[index_i]) + 1);
+					strncpy(mime, types[index_i], strlen(types[index_i]));
+					break;
+				}
+			}
+		}
 	}
 
 	return mime;
@@ -325,10 +335,13 @@ Description: Gets the root folder from the command line
 char* get_root()
 {
 	char *root = (char*) malloc(MAX_ROOT);
+	bzero(root, MAX_ROOT);
 	printf("\nPlease input a valid root folder, or specify \"EXIT\" to exit: ");
 	fflush(stdout);
+
 	//get the root folder
 	scanf("%s", root);
+	printf("Got the root: %s\n", root);
 
 	return root;
 }
@@ -351,27 +364,40 @@ Description: Makes the header needed to properly send
 *******************************************************/
 char* make_header(char code_mesg[], char content_type[], int length)
 {
-	char length_str[2];
+	char length_str[100];
+	bzero(length_str, 100);
 
 	char *header = (char*) malloc(122);
 
-	strcpy(header, "HTTP/1.0 ");
+	int length_of_length = 0;
+
+	strncpy(header, "HTTP/1.0 ", 9);
 
 	//get the code message
-	strcat(header, code_mesg);
+	strncat(header, code_mesg, strlen(code_mesg));
 
-	strcat(header, "\nConnection: close\nContent-Type: ");
+	strncat(header, "\nConnection: close\n", 19);
 
-	//get the content type
-	strcat(header, content_type);
+	//get the content type if it is not NULL
+	if(content_type != NULL)
+	{
+		strncat(header, "Content-Type: ", 14);
+		strncat(header, content_type, strlen(content_type));
+		strncat(header, "\n", 1);
+	}
 
-	strcat(header, "\nContent-Length: ");
+	strncat(header, "Content-Length: ", 16);
 	
 	//get the length as a c-string
-	sprintf(length_str, "%d", length);
-	strcat(header, length_str);
+	if(length < 0)
+		length = 0;
 
-	strcat(header, "\nServer: cs360httpd/1.0 (Unix)\n\n");
+	length_of_length = strlen(length_str) - 1;
+	printf("Truncated by: %d\n", snprintf(length_str, length_of_length, "%d", length));
+	strncat(header, length_str, length_of_length);
+	printf("Got size as string: %s\n", length_str);
+
+	strncat(header, "\nServer: cs360httpd/1.0 (Unix)\n\n", 32);
 	return header;
 }
 
@@ -391,22 +417,22 @@ char* make_code(int code_flag)
 	switch(code_flag)
 	{
 		case 1:
-			strcpy(code, "200 OK");
+			strncpy(code, "200 OK", 6);
 			break;
 		case 2:
-			strcpy(code, "400 Bad Request");
+			strncpy(code, "400 Bad Request", 15);
 			break;
 		case 3:
-			strcpy(code, "404 Not Found");
+			strncpy(code, "404 Not Found", 13);
 			break;
 		case 4:
-			strcpy(code, "414 Request-URI Too Long");
+			strncpy(code, "414 Request-URI Too Long", 24);
 			break;
 		case 5:
-			strcpy(code, "501 Not Implemented");
+			strncpy(code, "501 Not Implemented", 19);
 			break;
 		default:
-			strcpy(code, "NONE");
+			strncpy(code, "NONE", 4);
 	}
 
 	return code;

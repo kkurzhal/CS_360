@@ -13,9 +13,10 @@
 #include <signal.h>
 #include <ctype.h>
 #include <dirent.h>
+#include <bsd/string.h>
 
 #define MAX_ROOT 100
-#define MAX_REQUEST 64
+#define MAX_REQUEST 500
 #define MAX_RESPONSE 1500
 
 char* capitalize(char[]);
